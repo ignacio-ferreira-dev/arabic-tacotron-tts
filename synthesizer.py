@@ -8,7 +8,6 @@ from text import text_to_sequence
 from util import audio
 from datasets import arpa
 
-
 class Synthesizer:
   def load(self, checkpoint_path, model_name='tacotron'):
     print('Constructing model: %s' % model_name)
@@ -25,8 +24,7 @@ class Synthesizer:
     saver = tf.train.Saver()
     saver.restore(self.session, checkpoint_path)
 
-
-  def synthesize(self, text):
+  def synthesize(self, text, only_wav=False):
     text = arpa.to_arpa(text)
     cleaner_names = [x.strip() for x in hparams.cleaners.split(',')]
     seq = text_to_sequence(text, cleaner_names)
@@ -37,6 +35,8 @@ class Synthesizer:
     wav = self.session.run(self.wav_output, feed_dict=feed_dict)
     wav = audio.inv_preemphasis(wav)
     wav = wav[:audio.find_endpoint(wav)]
+    if only_wav:
+        return wav
     out = io.BytesIO()
     audio.save_wav(wav, out)
     return out.getvalue()

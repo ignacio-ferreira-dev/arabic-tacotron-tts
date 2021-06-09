@@ -42,7 +42,6 @@ def add_stats(model):
 def time_string():
   return datetime.now().strftime('%Y-%m-%d %H:%M')
 
-
 def train(log_dir, args):
   commit = get_git_commit() if args.git else 'None'
   checkpoint_path = os.path.join(log_dir, 'model.ckpt')
@@ -123,7 +122,6 @@ def train(log_dir, args):
       log('Exiting due to exception: %s' % e, slack=True)
       traceback.print_exc()
       coord.request_stop(e)
-
 
 def main():
   parser = argparse.ArgumentParser()

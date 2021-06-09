@@ -7,7 +7,7 @@ from hparams import hparams
 
 
 def preprocess_nawar(args):
-  in_dir = args.base_dir
+  in_dir = args.input_dir
   out_dir = args.output
   os.makedirs(out_dir, exist_ok=True)
   metadata = nawar.build_from_path(in_dir, out_dir, args.num_workers, tqdm=tqdm)
@@ -26,8 +26,8 @@ def write_metadata(metadata, out_dir):
 
 def main():
   parser = argparse.ArgumentParser()
-  parser.add_argument('--base_dir', default=os.path.expanduser('~/tacotron'))
-  parser.add_argument('--output', default='training')
+  parser.add_argument('--input_dir', type=str, required=True)
+  parser.add_argument('--output', type=str, required=True)
   parser.add_argument('--dataset', required=True, default="nawar", choices=['nawar'])
   parser.add_argument('--num_workers', type=int, default=cpu_count())
   args = parser.parse_args()
