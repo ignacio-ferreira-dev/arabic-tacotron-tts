@@ -19,7 +19,13 @@ class Synthesizer:
       self.wav_output = audio.inv_spectrogram_tensorflow(self.model.linear_outputs[0])
 
     print('Loading checkpoint: %s' % checkpoint_path)
-    self.session = tf.Session()
+    try:
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        self.session = tf.Session(config=config)
+    except:
+        print("Dynamic memory enabling was unsucessful")
+        self.session = tf.Session()
     self.session.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
     saver.restore(self.session, checkpoint_path)

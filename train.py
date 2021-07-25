@@ -72,8 +72,11 @@ def train(log_dir, args):
   loss_window = ValueWindow(100)
   saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
 
+  session_config = tf.ConfigProto()
+  session_config.gpu_options.allow_growth = True
+  
   # Train!
-  with tf.Session() as sess:
+  with tf.Session(config=session_config) as sess:
     try:
       summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
       sess.run(tf.global_variables_initializer())
