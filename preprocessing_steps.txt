@@ -1,0 +1,36 @@
+Easy way:
+
+To process words.xlsx:
+first save it as a CSV file to words.csv, use a comma  (,) as delimiter 
+
+Run the command 
+python process_mp3.py --input_folder wordbywordaudio-main --out_folder training --csv words.csv
+
+
+where wordbywordaudio-main is the folder containing the mp3s. 
+This will run steps 1 - 3, generating a folder called training with the neccesary files to run the training process.
+
+
+Flexible way, allowing for more complex dataflows 
+
+1) Generate wav files from mp3
+To generate wav files run the following command:
+python mp3_to_wav.py --input_folder wordbywordaudio-main --out_folder  wordbywordaudio_wavs
+where wordbywordaudio-main is the folder containing the mp3s
+This process will run in 5 to 15 minutes on a SSD disk, it may take longer on a mechanical disk.
+
+2) Process words file step
+To process words.xlsx:
+first export it as a CSV file, use a comma  (,) as delimiter 
+then run the following command:
+python process_words.py --input words.csv --output wordbywordaudio_wavs/temp_filtered.csv --wav wordbywordaudio_wavs
+
+The command accepts the optional parameters  --text_column and --filename_column to set the names of the respective columns in the csv. They are set by default to 0 and 2 to process the current file structure.
+
+Wav parameter is required to check for missing files. 
+
+3)  Preprocess step
+Run the command
+python preprocess.py --input_dir wordbywordaudio_wavs  --output training --dataset nawar --num_workers 4
+
+where num_workers is the number of cpu cores. This process will take about an hour and half on a quad core computer.
