@@ -16,6 +16,7 @@ from util import audio, infolog, plot, ValueWindow
 log = infolog.log
 
 
+
 def get_git_commit():
   subprocess.check_output(['git', 'diff-index', '--quiet', 'HEAD'])   # Verify client is clean
   commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()[:10]
@@ -69,7 +70,7 @@ def train(log_dir, args):
   step = 0
   time_window = ValueWindow(100)
   loss_window = ValueWindow(100)
-  saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=2)
+  saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
 
   # Train!
   with tf.Session() as sess:
@@ -77,13 +78,18 @@ def train(log_dir, args):
       summary_writer = tf.summary.FileWriter(log_dir, sess.graph)
       sess.run(tf.global_variables_initializer())
 
-      if args.restore_step:
+      if args.restore_step > 0:
         # Restore from a checkpoint if the user requested it.
-        checkpoint_state = tf.train.get_checkpoint_state(log_dir)
+        checkpoint_state = tf.train.get_checkpoint_state(log_dir,latest_filename="model.ckpt-#####")
         restore_path = '%s-%d' % (checkpoint_path, args.restore_step)
-        if checkpoint_state is not None:
-          saver.restore(sess, checkpoint_state.model_checkpoint_path)
-          log('Resuming from checkpoint: %s at commit: %s' % (checkpoint_state.model_checkpoint_path, commit), slack=True)
+        if checkpoint_state is None:
+          model_checkpoint_path = os.path.join(log_dir,'model.ckpt-%d.data-00000-of-00001' % args.restore_step)
+        else:
+          model_checkpoint_path = checkpoint_state.model_checkpoint_path
+          log(restore_path,checkpoint_state.model_checkpoint_path, slack=True)
+        if restore_path is not None:
+          saver.restore(sess, restore_path)#checkpoint_state.model_checkpoint_path)
+          log('Resuming from checkpoint: %s at commit: %s' % (restore_path, commit), slack=True)
       else:
         log('Starting new training run at commit: %s' % commit, slack=True)
 
@@ -124,6 +130,9 @@ def train(log_dir, args):
       coord.request_stop(e)
 
 def main():
+  from tensorflow.python.util import deprecation
+  deprecation._PRINT_DEPRECATION_WARNINGS = False
+    
   parser = argparse.ArgumentParser()
   parser.add_argument('--base_dir', default=os.getcwd())
   parser.add_argument('--input', default='training/train.txt')
@@ -131,7 +140,7 @@ def main():
   parser.add_argument('--name', help='Name of the run. Used for logging. Defaults to model name.')
   parser.add_argument('--hparams', default='',
     help='Hyperparameter overrides as a comma-separated list of name=value pairs')
-  parser.add_argument('--restore_step', type=bool, default=True, help='Global step to restore from checkpoint.')
+  parser.add_argument('--restore_step', type=int, default=0, help='Global step to restore from checkpoint.')
   parser.add_argument('--summary_interval', type=int, default=100,
     help='Steps between running summary ops.')
   parser.add_argument('--checkpoint_interval', type=int, default=1000,
